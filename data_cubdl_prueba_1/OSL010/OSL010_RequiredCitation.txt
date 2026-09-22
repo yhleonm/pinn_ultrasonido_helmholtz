@@ -1,0 +1,44 @@
+# NOTE: ADDITIONAL CITATION REQUIRED
+
+Sequence: OSL010
+Abbreviated Description: Simulated data that may be used for a dynamic range test
+Required Citation: PICMUS, “Plane-wave imaging evaluation framework for medical ultrasound,” 2020. [Online]. Available: https://www.creatis.insa-lyon.fr/EvaluationPlatform/picmus/
+
+@misc{web:picmus,
+  author = {PICMUS},
+  title = {Plane-wave Imaging evaluation framework for Medical Ultrasound},
+year = {2020},
+  url = {https://www.creatis.insa-lyon.fr/EvaluationPlatform/picmus/}
+}
+
+In addition to the three required citations for use of any CUBDL-Related Data:
+
+@inproceedings{cubdl_ius,
+  title={Challenge on Ultrasound Beamforming with Deep Learning (CUBDL)},
+  author={Bell, Muyinatu A Lediju and Huang, Jiaqi and Hyun, Dongwoon and Eldar, Yonina C and van Sloun, Ruud and Mischi, Massimo},
+  booktitle={Proceedings of the 2020 IEEE International Ultrasonics Symposium},
+  year={2020}
+  pages={1-5},
+  doi={10.1109/IUS46767.2020.9251434}}
+}
+
+@article{cubdl_journal,
+  title={Deep Learning for Ultrasound Image Formation: CUBDL Evaluation Framework & Open Datasets},
+  author={Hyun, D. and Wiacek, A. and Goudarzi, S. and Rothl{\"u}bbers, S. and Asif, A. and Eickel, K. and Eldar, Y. C. and Huang, J. and Mischi, M. and Rivaz, H. and Sinden, D. and van Sloun, R.J.G. and Strohm, H. and Bell, M. A. L.},
+  journal={IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control},
+  volume={x},
+  number={x},
+  pages={xx},
+  year={2021},
+  publisher={IEEE}
+}
+
+@misc{cubdl_data,
+doi = {10.21227/f0hn-8f92},
+url = {http://dx.doi.org/10.21227/f0hn-8f92},
+author = {Bell, Muyinatu A. Lediju and Huang, Jiaqi and Wiacek, Alycen and Gong, Ping and Chen, Shigao and Ramalli, Alessandro and Tortoli, Piero and Luijten, Ben and Mischi, Massimo and Rindal, Ole Marius Hoel and Perrot, Vincent and Liebgott, Hervé and Zhang, Xi and Luo, Jianwen and Oluyemi, Eniola and Ambinder, Emily},
+publisher = {IEEE DataPort},
+title = {{Challenge on Ultrasound Beamforming with Deep Learning (CUBDL) Datasets}},
+url = {https://ieee-dataport.org/competitions/challenge-ultrasound-beamforming-deep-learning-cubdl-datasets}}
+year = {2019}
+}

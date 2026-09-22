@@ -1,0 +1,73 @@
+# ==========================================
+# Datos pesados y datasets de ultrasonido
+# ==========================================
+*.hdf5
+*.h5
+*.mat
+*.npz
+*.npy
+*.pt
+*.pth
+*.ckpt
+
+# Carpetas de datos y cargas
+data_cubdl_prueba_1/*.hdf5
+data_cubdl_prueba_1/*/*.hdf5
+data_raw/uploads/*
+!data_raw/uploads/.gitkeep
+medical_insight_webapp/backend/workspace_placeholder/
+
+# PDFs grandes de literatura SOTA (>10MB)
+articulo/sota/*.pdf
+
+# Logs y trazas de ejecución
+*.log
+logs/
+logs/webapp_jobs/*
+!logs/webapp_jobs/.gitkeep
+
+# ==========================================
+# Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==========================================
+# Node / Frontend (medical_insight_webapp)
+# ==========================================
+node_modules/
+medical_insight_webapp/frontend/node_modules/
+medical_insight_webapp/frontend/dist/
+medical_insight_webapp/frontend/.vite/
+
+# ==========================================
+# IDEs y Sistema Operativo
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

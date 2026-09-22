@@ -1,0 +1,13 @@
+{
+  "tumor_x_mm": 0.0,
+  "tumor_z_mm": 23.5,
+  "cnr_c_dbr": 3.5153418716399547,
+  "cnr_alpha_dbr": 6.028888770521972,
+  "peak_distance_mm": 1.4736328328970287,
+  "x_min_mm": -19.049999999999997,
+  "x_max_mm": 19.049999999999997,
+  "z_min_mm": 0.0,
+  "z_max_mm": 32.0,
+  "alpha_unit": "dB/MHz/cm",
+  "peak_distance_alpha_mm": 5.351431484462718
+}
