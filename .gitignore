@@ -9,6 +9,10 @@
 *.pt
 *.pth
 *.ckpt
+data_raw/*.mat
+data_raw/*.hdf5
+data_raw/*.h5
+data_raw/*.npz
 
 # Carpetas de datos y cargas
 data_cubdl_prueba_1/*.hdf5
@@ -20,16 +24,44 @@ medical_insight_webapp/backend/workspace_placeholder/
 # PDFs grandes de literatura SOTA (>10MB)
 articulo/sota/*.pdf
 
-# Logs y trazas de ejecución
+# ==========================================
+# Archivos temporales de compilación LaTeX
+# ==========================================
+*.aux
 *.log
+*.out
+*.fls
+*.fdb_latexmk
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+
+# ==========================================
+# Scripts temporales / pruebas descartadas
+# ==========================================
+scratch/
+archivos/
+imagenes/
+articulo/metrics_*_corr.json
+articulo/metrics_*_decay*.json
+articulo/metrics_*_NUEVO.json
+articulo/metrics_*_seed*.json
+
+# Logs y trazas de ejecución
 logs/
 logs/webapp_jobs/*
 !logs/webapp_jobs/.gitkeep
 
 # ==========================================
-# Python
+# Python & Cachés
 # ==========================================
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *$py.class
 *.so

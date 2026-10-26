@@ -394,3 +394,129 @@ class CUBDLLoader:
             P_meas[f] = P_calib
             
         return sensor_x, P_meas
+
+
+class OASBUDLoader:
+    """
+    Cargador clínico para el dataset OASBUD (Open Access Series of Breast Ultrasound Data,
+    Zenodo 545928 - Piotrzkowska-Wróblewska et al., Medical Physics 2017).
+
+    Gestiona señales RF 2D post-beamformed (líneas A-scan focalizadas de un transductor
+    lineal Ultrasonix L14-5/38 a fs = 40 MHz) y las máscaras binarias (roi1/roi2)
+    delineadas por radiólogos expertos para 100 lesiones mamarias (48 benignas, 52 malignas).
+    """
+
+    _MAT_CACHE: dict[str, np.ndarray] = {}
+
+    def __init__(
+        self,
+        mat_path: str = "data_raw/OASBUD.mat",
+        case_id: str | int = "1mm",
+        view: int = 1,
+    ):
+        self.mat_path = str(mat_path)
+        self.fs = 40.0e6          # Frecuencia de muestreo Ultrasonix SonixTouch (40 MHz)
+        self.c0 = 1540.0          # Velocidad de referencia en tejido mamario (m/s)
+        self.aperture_m = 0.038   # Ancho lateral activo del transductor L14-5/38 (38 mm)
+        self.t0 = 0.0
+
+        self.case_id: str = ""
+        self.view: int = int(view)
+        self.birads: str = ""
+        self.label: int = 0       # 0 = Benigno, 1 = Maligno
+        self.clinical_label: str = ""
+        self.rf_2d: np.ndarray | None = None
+        self.roi_mask: np.ndarray | None = None
+        self.x_grid: np.ndarray | None = None
+        self.z_grid: np.ndarray | None = None
+        self.dx: float = 0.0
+        self.dz: float = 0.0
+
+        self._load_case(case_id=case_id, view=view)
+
+    def _load_case(self, case_id: str | int, view: int) -> None:
+        import scipy.io as sio
+
+        if self.mat_path not in OASBUDLoader._MAT_CACHE:
+            mat = sio.loadmat(self.mat_path, squeeze_me=True)
+            OASBUDLoader._MAT_CACHE[self.mat_path] = mat["data"]
+
+        data = OASBUDLoader._MAT_CACHE[self.mat_path]
+        record = None
+        if isinstance(case_id, int):
+            record = data[case_id]
+        else:
+            target = str(case_id).replace("OASBUD_", "").strip()
+            for item in data:
+                if str(item["id"]).strip() == target:
+                    record = item
+                    break
+        if record is None:
+            raise ValueError(f"Caso '{case_id}' no encontrado en {self.mat_path}.")
+
+        rf_key = "rf1" if view == 1 else "rf2"
+        roi_key = "roi1" if view == 1 else "roi2"
+
+        self.case_id = str(record["id"]).strip()
+        self.birads = str(record["birads"]).strip()
+        self.label = int(record["class"])
+        pathology_str = "MALIGNO" if self.label == 1 else "BENIGNO"
+        self.clinical_label = f"{pathology_str} - BI-RADS {self.birads} (OASBUD)"
+
+        self.rf_2d = np.asarray(record[rf_key], dtype=np.float32)
+        self.roi_mask = np.asarray(record[roi_key] > 0, dtype=bool)
+
+        Nz, Nx = self.rf_2d.shape
+        self.dz = float(self.c0 / (2.0 * self.fs))  # 19.25 um
+        self.dx = float(self.aperture_m / Nx)       # ~74.51 um para 510 líneas
+        self.x_grid = ((np.arange(Nx, dtype=np.float32) - (Nx - 1) / 2.0) * self.dx)
+        self.z_grid = (np.arange(Nz, dtype=np.float32) * self.dz)
+
+    def get_roi_centroid_and_bounds(self, margin_factor: float = 0.82) -> dict[str, float]:
+        """
+        Obtiene el centro geométrico y la ventana de búsqueda alrededor de la lesión
+        para centrar el dominio computacional de la PINN (sin filtrar la forma de roi_mask
+        al entrenamiento).
+        """
+        z_idx, x_idx = np.where(self.roi_mask)
+        x_center = float(self.x_grid[x_idx].mean())
+        z_center = float(self.z_grid[z_idx].mean())
+        span_x = float(self.x_grid[x_idx.max()] - self.x_grid[x_idx.min()])
+        span_z = float(self.z_grid[z_idx.max()] - self.z_grid[z_idx.min()])
+        half_x = max(0.0045, margin_factor * span_x)
+        half_z = max(0.0045, margin_factor * span_z)
+        half_iso = max(half_x, half_z)
+        # Radio equivalente área-efectiva solo para referencia escalar
+        area_mm2 = float(self.roi_mask.sum()) * (self.dx * 1e3) * (self.dz * 1e3)
+        equiv_radius_mm = float(np.sqrt(area_mm2 / np.pi))
+        return {
+            "x_center_m": x_center,
+            "z_center_m": z_center,
+            "half_x_m": half_x,
+            "half_z_m": half_z,
+            "roi_half_mm": round(float(half_iso * 1e3), 2),
+            "equiv_radius_mm": round(equiv_radius_mm, 2),
+        }
+
+    def extract_roi_contour_mm(self, max_points: int = 140) -> list[list[float]]:
+        """
+        Extrae el polígono cerrado real [x_mm, z_mm] del contorno de la máscara
+        delineada por el radiólogo (roi_mask) ordenando los píxeles de borde angularmente
+        o mediante matplotlib contour, para renderizado en gráficas y Medical Insight 3D.
+        """
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots()
+        X_mm, Z_mm = np.meshgrid(self.x_grid * 1e3, self.z_grid * 1e3)
+        cs = ax.contour(X_mm, Z_mm, self.roi_mask.astype(np.float32), levels=[0.5])
+        segs = cs.allsegs[0] if len(cs.allsegs) > 0 else []
+        plt.close(fig)
+
+        if not segs:
+            return []
+        longest = max(segs, key=lambda s: len(s))
+        if len(longest) > max_points:
+            idx = np.linspace(0, len(longest) - 1, max_points, dtype=int)
+            longest = longest[idx]
+        return [[round(float(pt[0]), 3), round(float(pt[1]), 3)] for pt in longest]
+

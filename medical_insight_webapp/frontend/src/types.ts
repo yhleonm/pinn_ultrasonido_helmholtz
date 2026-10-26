@@ -46,6 +46,13 @@ export interface ReconstructionMaps {
   cnr_alpha_dbr: number | null;
   peak_distance_mm: number | null;
   peak_distance_alpha_mm: number | null;
+  roi_contour_mm?: number[][] | null;
+  pred_contour_mm?: number[][] | null;
+  clinical_label?: string | null;
+  dice_c?: number | null;
+  dice_alpha?: number | null;
+  c_roi_mean_ms?: number | null;
+  alpha_roi_mean_db?: number | null;
   reliability_note: string | null;
 }
 

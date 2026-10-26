@@ -51,7 +51,7 @@ def _dataset_prefix(dataset_id: str) -> str:
 
 def _tissue_type(dataset_id: str) -> TissueType:
     prefix = _dataset_prefix(dataset_id)
-    return TissueType.IN_VIVO if prefix == "TSH" else TissueType.PHANTOM
+    return TissueType.IN_VIVO if prefix in ("TSH", "OASBUD") else TissueType.PHANTOM
 
 
 class ReconstructionStore:
@@ -87,17 +87,18 @@ class ReconstructionStore:
     def _build_summary(self, dataset_id: str) -> DatasetSummary:
         metrics = self._load_cnr_metrics(dataset_id)
         prefix = _dataset_prefix(dataset_id)
+        eff_radius = float(metrics.get("equiv_radius_mm", TUMOR_RADIUS_MM))
 
         return DatasetSummary(
             dataset_id=dataset_id,
             tissue_type=_tissue_type(dataset_id),
-            institution=INSTITUTION_MAP.get(prefix),
+            institution=metrics.get("clinical_label") or INSTITUTION_MAP.get(prefix),
             status=JobStatus.DONE,
             tumor_x_mm=metrics.get("tumor_x_mm"),
             tumor_z_mm=metrics.get("tumor_z_mm"),
             cnr_c_dbr=metrics.get("cnr_c_dbr"),
             cnr_alpha_dbr=metrics.get("cnr_alpha_dbr"),
-            is_reliable_velocity=metrics.get("peak_distance_mm", 99.0) <= TUMOR_RADIUS_MM,
+            is_reliable_velocity=metrics.get("peak_distance_mm", 99.0) <= eff_radius,
         )
 
     # ------------------------------------------------------------------
@@ -120,7 +121,7 @@ class ReconstructionStore:
     def get_reconstruction(
         self,
         dataset_id: str,
-        max_resolution: int = 128,
+        max_resolution: int = 200,
     ) -> ReconstructionMaps:
         """
         Carga c_map y alpha_map desde disco, los sub-muestrea a una
@@ -147,10 +148,12 @@ class ReconstructionStore:
         z_min_mm = metrics.get("z_min_mm", 0.0)
         z_max_mm = metrics.get("z_max_mm", 32.0)
         
-        # Recorte de la ROI (zoom automático)
-        if tumor_x is not None and tumor_z is not None:
-            # ROI de 1.5 cm x 1.5 cm = 15 mm x 15 mm (± 7.5 mm)
-            roi_half = 7.5
+        # Recorte de la ROI (zoom automático solo para fantomas sintéticos/CUBDL;
+        # en OASBUD in-vivo se preserva el mapa de campo completo continuo)
+        is_full_field = dataset_id.startswith("OASBUD_") or bool(metrics.get("full_field_view", False))
+        if not is_full_field and tumor_x is not None and tumor_z is not None:
+            # ROI de 1.5 cm x 1.5 cm (± 7.5 mm)
+            roi_half = float(metrics.get("roi_half_mm", 7.5))
             x_min_roi = max(x_min_mm, tumor_x - roi_half)
             x_max_roi = min(x_max_mm, tumor_x + roi_half)
             z_min_roi = max(z_min_mm, tumor_z - roi_half)
@@ -200,7 +203,8 @@ class ReconstructionStore:
         peak_dist = metrics.get("peak_distance_mm")
         peak_dist_alpha = metrics.get("peak_distance_alpha_mm")
 
-        # Generar interpretación clínica
+        # Generar interpretación clínica con el radio equivalente real de la lesión (OASBUD) o del fantoma (3.0 mm)
+        eff_radius_mm = max(TUMOR_RADIUS_MM, float(metrics.get("equiv_radius_mm", TUMOR_RADIUS_MM)))
         from app.services.interpretation import build_interpretation
         clinical_interpretation = build_interpretation(
             tumor_x_mm=tumor_x,
@@ -209,6 +213,7 @@ class ReconstructionStore:
             cnr_alpha_dbr=metrics.get("cnr_alpha_dbr"),
             peak_distance_mm=peak_dist,
             peak_distance_alpha_mm=peak_dist_alpha,
+            expected_radius_mm=eff_radius_mm,
         )
 
         reliability_note = clinical_interpretation.reliability_reason if clinical_interpretation.reliability_level != ReliabilityLevel.HIGH else None
@@ -226,11 +231,18 @@ class ReconstructionStore:
             clinical_interpretation=clinical_interpretation,
             tumor_x_mm=tumor_x,
             tumor_z_mm=tumor_z,
-            tumor_radius_mm=TUMOR_RADIUS_MM,
+            tumor_radius_mm=eff_radius_mm,
             cnr_c_dbr=metrics.get("cnr_c_dbr"),
             cnr_alpha_dbr=metrics.get("cnr_alpha_dbr"),
             peak_distance_mm=peak_dist,
             peak_distance_alpha_mm=peak_dist_alpha,
+            roi_contour_mm=metrics.get("roi_contour_mm"),
+            pred_contour_mm=metrics.get("pred_contour_mm"),
+            clinical_label=metrics.get("clinical_label"),
+            dice_c=metrics.get("dice_c"),
+            dice_alpha=metrics.get("dice_alpha"),
+            c_roi_mean_ms=metrics.get("c_roi_mean_ms"),
+            alpha_roi_mean_db=metrics.get("alpha_roi_mean_db"),
             reliability_note=reliability_note,
         )
 

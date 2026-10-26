@@ -13,6 +13,8 @@ interface Props {
   tumorXMm: number | null;
   tumorZMm: number | null;
   tumorRadiusMm: number;
+  roiContourMm?: number[][] | null;
+  predContourMm?: number[][] | null;
   showWarningRing: boolean;
   label: string;
   unit?: string;
@@ -21,27 +23,49 @@ interface Props {
   kSigma?: number;
 }
 
-// Paletas: velocidad usa un diverging azul-rojo (frío/lento vs caliente/rápido);
-// atenuación usa una escala secuencial ámbar, coherente con las convenciones
-// ya usadas en los reportes de investigación (hot colormap).
+// Colormaps idénticos a Matplotlib:
+// - velocity: 'RdBu_r' divergente de 11 paradas (azul profundo -> celeste -> blanco -> coral -> rojo intenso)
+// - attenuation: 'hot' secuencial térmico (negro -> rojo vivo -> naranja/amarillo brillante -> blanco)
+const RDBU_R_STOPS: [number, number, number][] = [
+  [5, 48, 97],     // 0.0
+  [33, 102, 172],  // 0.1
+  [67, 147, 195],  // 0.2
+  [146, 197, 222], // 0.3
+  [209, 229, 240], // 0.4
+  [247, 247, 247], // 0.5 (blanco neutro en ~1564 m/s)
+  [253, 219, 199], // 0.6
+  [244, 165, 130], // 0.7
+  [214, 96, 77],   // 0.8
+  [178, 24, 43],   // 0.9
+  [103, 0, 31],    // 1.0
+];
+
 function colorFor(value: number, min: number, max: number, scale: 'velocity' | 'attenuation'): string {
   const t = Math.max(0, Math.min(1, (value - min) / (max - min || 1)));
 
   if (scale === 'velocity') {
-    // azul (lento) -> blanco (medio) -> rojo (rápido)
-    if (t < 0.5) {
-      const s = t / 0.5;
-      return `rgb(${Math.round(40 + s * 215)}, ${Math.round(80 + s * 175)}, ${Math.round(200 + s * 55)})`;
-    } else {
-      const s = (t - 0.5) / 0.5;
-      return `rgb(${Math.round(255)}, ${Math.round(255 - s * 175)}, ${Math.round(255 - s * 215)})`;
-    }
+    const pos = t * (RDBU_R_STOPS.length - 1);
+    const idx = Math.min(RDBU_R_STOPS.length - 2, Math.floor(pos));
+    const frac = pos - idx;
+    const c0 = RDBU_R_STOPS[idx];
+    const c1 = RDBU_R_STOPS[idx + 1];
+    const r = Math.round(c0[0] + frac * (c1[0] - c0[0]));
+    const g = Math.round(c0[1] + frac * (c1[1] - c0[1]));
+    const b = Math.round(c0[2] + frac * (c1[2] - c0[2]));
+    return `rgb(${r}, ${g}, ${b})`;
   }
-  // atenuación: negro -> ámbar -> blanco cálido
-  const r = Math.round(20 + t * 235);
-  const g = Math.round(10 + t * 190);
-  const b = Math.round(5 + t * 120);
-  return `rgb(${r}, ${g}, ${b})`;
+
+  // Colormap 'hot' exacto de Matplotlib: negro -> rojo vivo -> amarillo brillante -> blanco
+  if (t < 0.375) {
+    const s = t / 0.375;
+    return `rgb(${Math.round(10 + s * 245)}, 0, 0)`;
+  } else if (t < 0.75) {
+    const s = (t - 0.375) / 0.375;
+    return `rgb(255, ${Math.round(s * 255)}, 0)`;
+  } else {
+    const s = (t - 0.75) / 0.25;
+    return `rgb(255, 255, ${Math.round(s * 255)})`;
+  }
 }
 
 function getTicks(minVal: number, maxVal: number): number[] {
@@ -188,6 +212,8 @@ export default function ReconstructionCanvas({
   tumorXMm,
   tumorZMm,
   tumorRadiusMm,
+  roiContourMm = null,
+  predContourMm = null,
   showWarningRing,
   label,
   unit = '',
@@ -228,16 +254,17 @@ export default function ReconstructionCanvas({
     ctx.fillStyle = '#000000';
     ctx.fillRect(padLeft, padTop, plotW, plotH);
 
-    // 1. Renderizar B-mode si está presente
-    let bmodeMin = -50, bmodeMax = 0;
+    // 1. Renderizar B-mode si está presente (rango clínico [-60, 0] dB en OASBUD o ventana de 45 dB)
+    let bmodeMin = -60, bmodeMax = 0;
     if (bmodeData) {
       let actualMin = Infinity, actualMax = -Infinity;
       for (const row of bmodeData) for (const v of row) {
         if (v < actualMin) actualMin = v;
         if (v > actualMax) actualMax = v;
       }
-      bmodeMin = actualMin;
       bmodeMax = actualMax;
+      const dynRange = roiContourMm && roiContourMm.length > 0 ? 60.0 : 45.0;
+      bmodeMin = Math.max(actualMin, actualMax - dynRange);
     }
 
     const cellW = plotW / nx;
@@ -247,7 +274,8 @@ export default function ReconstructionCanvas({
       for (let i = 0; i < nz; i++) {
         for (let j = 0; j < nx; j++) {
           const val = bmodeData[i][j];
-          const t = Math.max(0, Math.min(1, (val - bmodeMin) / (bmodeMax - bmodeMin || 1)));
+          const tLin = Math.max(0, Math.min(1, (val - bmodeMin) / (bmodeMax - bmodeMin || 1)));
+          const t = roiContourMm && roiContourMm.length > 0 ? tLin : Math.pow(tLin, 0.9);
           const gray = Math.round(t * 255);
           ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
           ctx.fillRect(padLeft + j * cellW, padTop + i * cellH, cellW + 0.5, cellH + 0.5);
@@ -255,9 +283,11 @@ export default function ReconstructionCanvas({
       }
     }
 
-    // 2. Establecer límites de escala fijos para consistencia clínica y evitar amplificación de ruido
-    const min = colorScale === 'velocity' ? 1500.0 : 0.3;
-    const max = colorScale === 'velocity' ? 1600.0 : 0.9;
+    // 2. Establecer límites de escala idénticos a las figuras científicas de Matplotlib:
+    //    - Velocidad c(x,z): [1535, 1595] m/s (con RdBu_r centrado en ~1565 m/s)
+    //    - Atenuación α0(x,z): [0.45, 1.10] dB/MHz/cm (con hot colormap de alto contraste)
+    const min = colorScale === 'velocity' ? 1535.0 : 0.45;
+    const max = colorScale === 'velocity' ? 1595.0 : (roiContourMm && roiContourMm.length > 0 ? 1.10 : 0.90);
 
     if (showOverlay && data && nz > 0 && nx > 0) {
       // Calcular la máscara CCA con el gate de seguridad
@@ -380,8 +410,89 @@ export default function ReconstructionCanvas({
     ctx.fillText('z (mm)', 0, 0);
     ctx.restore();
 
-    // Overlay del tumor: círculo en la posición física conocida
-    if (tumorXMm !== null && tumorZMm !== null) {
+    // Overlay del tumor: polígono irregular real del radiólogo (OASBUD) + contorno punteado verde PINN
+    if (roiContourMm && roiContourMm.length > 2) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(padLeft, padTop, plotW, plotH);
+      ctx.clip();
+
+      // 1. Contorno continuo Cian: Ground Truth del Radiólogo (roi_mask)
+      ctx.strokeStyle = showWarningRing ? '#e8542a' : '#00e5ff';
+      ctx.lineWidth = 2.0;
+      ctx.setLineDash(showWarningRing ? [5, 4] : []);
+      ctx.beginPath();
+      roiContourMm.forEach(([xPt, zPt], idx) => {
+        const px = padLeft + ((xPt - xMinMm) / (xMaxMm - xMinMm)) * plotW;
+        const pz = padTop + ((zPt - zMinMm) / (zMaxMm - zMinMm)) * plotH;
+        if (idx === 0) ctx.moveTo(px, pz);
+        else ctx.lineTo(px, pz);
+      });
+      ctx.closePath();
+      ctx.stroke();
+
+      // 2. Contorno punteado Verde: Detección Ciega PINN (Componente Conexa Principal)
+      if (predContourMm && predContourMm.length > 2) {
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        predContourMm.forEach(([xPt, zPt], idx) => {
+          const px = padLeft + ((xPt - xMinMm) / (xMaxMm - xMinMm)) * plotW;
+          const pz = padTop + ((zPt - zMinMm) / (zMaxMm - zMinMm)) * plotH;
+          if (idx === 0) ctx.moveTo(px, pz);
+          else ctx.lineTo(px, pz);
+        });
+        ctx.closePath();
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // Leyenda compacta en la esquina superior izquierda del área de ploteo
+      const legX = padLeft + 6;
+      const legY = padTop + 6;
+      const legH = predContourMm && predContourMm.length > 2 ? 28 : 16;
+      ctx.fillStyle = 'rgba(10, 16, 15, 0.72)';
+      ctx.fillRect(legX, legY, 118, legH);
+      ctx.font = 'bold 8px "IBM Plex Mono", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+
+      // Línea cian en leyenda
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(legX + 5, legY + 8);
+      ctx.lineTo(legX + 19, legY + 8);
+      ctx.stroke();
+      ctx.fillStyle = '#e0f7fa';
+      ctx.fillText('ROI Radiólogo', legX + 23, legY + 8);
+
+      // Línea verde punteada en leyenda
+      if (predContourMm && predContourMm.length > 2) {
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([3, 2]);
+        ctx.beginPath();
+        ctx.moveTo(legX + 5, legY + 20);
+        ctx.lineTo(legX + 19, legY + 20);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#bbf7d0';
+        ctx.fillText('Detección PINN', legX + 23, legY + 20);
+      }
+
+      if (findingLabel && tumorXMm !== null && tumorZMm !== null) {
+        const px = padLeft + ((tumorXMm - xMinMm) / (xMaxMm - xMinMm)) * plotW;
+        const pz = padTop + ((tumorZMm - zMinMm) / (zMaxMm - zMinMm)) * plotH;
+        ctx.fillStyle = '#00e5ff';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(findingLabel, px, Math.max(padTop + 14, pz - 12));
+      }
+      ctx.restore();
+    } else if (tumorXMm !== null && tumorZMm !== null) {
       const px = padLeft + ((tumorXMm - xMinMm) / (xMaxMm - xMinMm)) * plotW;
       const pz = padTop + ((tumorZMm - zMinMm) / (zMaxMm - zMinMm)) * plotH;
       const radiusPx = (tumorRadiusMm / (xMaxMm - xMinMm)) * plotW;
@@ -403,7 +514,7 @@ export default function ReconstructionCanvas({
         ctx.fillText(findingLabel, px + radiusPx + 4, pz - 2);
       }
     }
-  }, [bmodeData, data, xMinMm, xMaxMm, zMinMm, zMaxMm, colorScale, showOverlay, overlayOpacity, tumorXMm, tumorZMm, tumorRadiusMm, showWarningRing, findingLabel, isReliable, kSigma]);
+  }, [bmodeData, data, xMinMm, xMaxMm, zMinMm, zMaxMm, colorScale, showOverlay, overlayOpacity, tumorXMm, tumorZMm, tumorRadiusMm, roiContourMm, predContourMm, showWarningRing, findingLabel, isReliable, kSigma]);
 
   return (
     <figure className="recon-canvas-figure">

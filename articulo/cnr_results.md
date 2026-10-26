@@ -18,18 +18,18 @@ Se calculan tres metricas de CNR para cada parametro reconstruido:
 
 | Dataset | Metrica | Parametro | Target | Background | Sigma | CNR | CNR (dBr) |
 |---|---|---|---|---|---|---|---|
-| MYO001 | Clasico (DAS) | $c$ (m/s) | 1522.17 | 1534.33 | 50.35 | 0.242 | -12.34 |
-| MYO001 | Robusto (sin margen) | $c$ (m/s) | 1594.68 | 1521.39 | 47.21 | 1.552 | 3.82 |
-| MYO001 | **Robusto (margen 15%)** | $c$ (m/s) | 1593.26 | 1539.15 | 45.54 | 1.188 | **1.50** |
-| MYO001 | Clasico (DAS) | $\alpha_0$ (dB/MHz/cm) | 0.0880 | 0.0922 | 0.0964 | 0.043 | -27.23 |
-| MYO001 | Robusto (sin margen) | $\alpha_0$ (dB/MHz/cm) | 0.2789 | 0.0567 | 0.0591 | 3.761 | 11.51 |
-| MYO001 | **Robusto (margen 15%)** | $\alpha_0$ (dB/MHz/cm) | 0.2046 | 0.0521 | 0.0376 | 4.053 | **12.16** |
-| TSH002 | Clasico (DAS) | $c$ (m/s) | 1465.97 | 1506.81 | 55.60 | 0.735 | -2.68 |
-| TSH002 | Robusto (sin margen) | $c$ (m/s) | 1591.14 | 1489.03 | 46.72 | 2.186 | 6.79 |
-| TSH002 | **Robusto (margen 15%)** | $c$ (m/s) | 1536.43 | 1476.06 | 28.93 | 2.087 | **6.39** |
-| TSH002 | Clasico (DAS) | $\alpha_0$ (dB/MHz/cm) | 0.0339 | 0.0602 | 0.1020 | 0.258 | -11.76 |
-| TSH002 | Robusto (sin margen) | $\alpha_0$ (dB/MHz/cm) | 0.2003 | 0.0299 | 0.0375 | 4.550 | 13.16 |
-| TSH002 | **Robusto (margen 15%)** | $\alpha_0$ (dB/MHz/cm) | 0.0608 | 0.0264 | 0.0138 | 2.500 | **7.96** |
+| MYO001 | Clasico (DAS) | $c$ (m/s) | 1556.53 | 1541.77 | 2.42 | 6.099 | 15.71 |
+| MYO001 | Robusto (sin margen) | $c$ (m/s) | 1552.34 | 1540.30 | 2.79 | 4.320 | 12.71 |
+| MYO001 | **Robusto (margen 15%)** | $c$ (m/s) | 1559.51 | 1543.35 | 5.21 | 3.103 | **9.84** |
+| MYO001 | Clasico (DAS) | $\alpha_0$ (dB/MHz/cm) | 0.6561 | 0.4989 | 0.0197 | 7.976 | 18.04 |
+| MYO001 | Robusto (sin margen) | $\alpha_0$ (dB/MHz/cm) | 0.6139 | 0.4834 | 0.0293 | 4.452 | 12.97 |
+| MYO001 | **Robusto (margen 15%)** | $\alpha_0$ (dB/MHz/cm) | 0.6853 | 0.5162 | 0.0539 | 3.136 | **9.93** |
+| TSH002 | Clasico (DAS) | $c$ (m/s) | 1552.84 | 1540.45 | 0.54 | 22.836 | 27.17 |
+| TSH002 | Robusto (sin margen) | $c$ (m/s) | 1548.95 | 1540.25 | 1.96 | 4.438 | 12.94 |
+| TSH002 | **Robusto (margen 15%)** | $c$ (m/s) | 1553.87 | 1542.40 | 3.58 | 3.205 | **10.12** |
+| TSH002 | Clasico (DAS) | $\alpha_0$ (dB/MHz/cm) | 0.5972 | 0.4461 | 0.0084 | 17.956 | 25.08 |
+| TSH002 | Robusto (sin margen) | $\alpha_0$ (dB/MHz/cm) | 0.5455 | 0.4435 | 0.0230 | 4.446 | 12.96 |
+| TSH002 | **Robusto (margen 15%)** | $\alpha_0$ (dB/MHz/cm) | 0.6101 | 0.4697 | 0.0434 | 3.237 | **10.20** |
 
 ## Analisis de Sensibilidad al Margen de Borde
 

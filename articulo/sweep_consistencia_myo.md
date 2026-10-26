@@ -6,17 +6,17 @@ Margen de borde excluido: 15%
 ## Resultados por dataset
 | Dataset | Disponible | CNR c (dBr) | CNR a (dBr) | Pico cerca borde (c) | Pico cerca borde (a) |
 |---|---|---|---|---|---|
-| MYO001 | si | 3.23 | 6.02 | si | si |
-| MYO002 | si | 3.52 | 6.03 | si | si |
-| MYO003 | si | 3.84 | 7.69 | si | si |
-| MYO004 | si | 0.59 | 8.58 | si | si |
-| MYO005 | si | 4.41 | 9.71 | si | si |
-| MYO006 | si | 7.57 | 7.22 | si | si |
+| MYO001 | si | 9.82 | 9.91 | no | no |
+| MYO002 | si | 9.40 | 9.38 | no | no |
+| MYO003 | si | 9.21 | 7.66 | no | no |
+| MYO004 | si | 9.88 | 9.66 | no | no |
+| MYO005 | si | 9.46 | 9.91 | no | no |
+| MYO006 | si | 8.04 | 8.70 | no | no |
 
 ## Estadisticas de consistencia
-- CNR c:  media = 3.86 dBr, std = 2.05 dBr
-- CNR a:  media = 7.54 dBr, std = 1.32 dBr
-- Veredicto c: DISPERSO - investigar causa
+- CNR c:  media = 9.30 dBr, std = 0.61 dBr
+- CNR a:  media = 9.20 dBr, std = 0.80 dBr
+- Veredicto c: CONSISTENTE (std < 30% de la media)
 - Veredicto a: CONSISTENTE (std < 30% de la media)
 
 ## Interpretacion

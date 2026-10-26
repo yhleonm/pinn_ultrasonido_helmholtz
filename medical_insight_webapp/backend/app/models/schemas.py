@@ -89,6 +89,19 @@ class ReconstructionMaps(BaseModel):
     peak_distance_alpha_mm: Optional[float] = Field(
         None, description="Distancia del pico de atenuacion reconstruido al centro DAS."
     )
+    roi_contour_mm: Optional[list[list[float]]] = Field(
+        None,
+        description="Polígono [x_mm, z_mm] del contorno real delineado por el radiólogo (OASBUD roi_mask).",
+    )
+    pred_contour_mm: Optional[list[list[float]]] = Field(
+        None,
+        description="Polígono [x_mm, z_mm] de la componente conexa principal de la detección ciega de la PINN.",
+    )
+    clinical_label: Optional[str] = None
+    dice_c: Optional[float] = None
+    dice_alpha: Optional[float] = None
+    c_roi_mean_ms: Optional[float] = None
+    alpha_roi_mean_db: Optional[float] = None
     reliability_note: Optional[str] = Field(
         None,
         description="Nota clínica/técnica si la reconstrucción tiene "

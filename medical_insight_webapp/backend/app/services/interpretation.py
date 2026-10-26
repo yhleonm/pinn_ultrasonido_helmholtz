@@ -34,24 +34,30 @@ CNR_USEFUL_THRESHOLD = 6.0
 CNR_EXCELLENT_THRESHOLD = 12.0
 
 
-def _velocity_is_reliable(peak_distance_mm: float | None) -> bool:
+def _velocity_is_reliable(
+    peak_distance_mm: float | None,
+    expected_radius_mm: float = TUMOR_RADIUS_MM,
+) -> bool:
     """
     Criterio de fiabilidad del canal de velocidad: si el pico
     reconstruido esta dentro del radio fisico esperado del hallazgo.
     """
     if peak_distance_mm is None:
         return False
-    return peak_distance_mm <= TUMOR_RADIUS_MM
+    return peak_distance_mm <= expected_radius_mm
 
 
-def _attenuation_is_reliable(peak_distance_alpha_mm: float | None) -> bool:
+def _attenuation_is_reliable(
+    peak_distance_alpha_mm: float | None,
+    expected_radius_mm: float = TUMOR_RADIUS_MM,
+) -> bool:
     """
     Criterio de fiabilidad del canal de atenuacion: si el pico
     reconstruido esta dentro del radio fisico esperado del hallazgo.
     """
     if peak_distance_alpha_mm is None:
         return False
-    return peak_distance_alpha_mm <= TUMOR_RADIUS_MM
+    return peak_distance_alpha_mm <= expected_radius_mm
 
 
 def _location_phrase(tumor_x_mm: float, tumor_z_mm: float) -> str:
@@ -66,6 +72,7 @@ def build_interpretation(
     cnr_alpha_dbr: float | None,
     peak_distance_mm: float | None,
     peak_distance_alpha_mm: float | None,
+    expected_radius_mm: float = TUMOR_RADIUS_MM,
 ) -> ClinicalInterpretation:
     """
     Punto unico de generacion de texto clinico. Cualquier cambio a como
@@ -77,24 +84,27 @@ def build_interpretation(
             finding_summary="No se identifico una zona de interes localizable en esta adquisicion.",
             reliability_level=ReliabilityLevel.LOW,
             reliability_reason="No hay una localizacion espacial valida para evaluar.",
+            velocity_reliable=False,
+            attenuation_reliable=False,
         )
 
+    eff_r = max(TUMOR_RADIUS_MM, float(expected_radius_mm))
     location = _location_phrase(tumor_x_mm, tumor_z_mm)
-    velocity_ok = _velocity_is_reliable(peak_distance_mm)
-    atten_ok = _attenuation_is_reliable(peak_distance_alpha_mm)
+    velocity_ok = _velocity_is_reliable(peak_distance_mm, eff_r)
+    atten_ok = _attenuation_is_reliable(peak_distance_alpha_mm, eff_r)
 
     if peak_distance_mm is None:
         vel_reason = "No se pudo verificar la posicion del hallazgo en el canal de velocidad."
     elif velocity_ok:
         vel_reason = (
             f"El punto de mayor contraste en velocidad de sonido esta dentro del "
-            f"radio fisico esperado ({peak_distance_mm:.1f} mm de {TUMOR_RADIUS_MM:.0f} mm)."
+            f"radio fisico esperado ({peak_distance_mm:.1f} mm de {eff_r:.1f} mm)."
         )
     else:
         vel_reason = (
             f"El punto de mayor contraste en velocidad de sonido aparece a "
             f"{peak_distance_mm:.1f} mm de la zona esperada -- mas lejos de lo "
-            f"fisicamente razonable ({TUMOR_RADIUS_MM:.0f} mm). Esto corresponde a "
+            f"fisicamente razonable ({eff_r:.1f} mm). Esto corresponde a "
             f"un artefacto numerico de frontera o desfase local en el metodo. "
             f"Este canal se excluye como evidencia en este caso."
         )
@@ -104,13 +114,13 @@ def build_interpretation(
     elif atten_ok:
         att_reason = (
             f"El punto de mayor contraste en atenuacion acustica esta dentro del "
-            f"radio fisico esperado ({peak_distance_alpha_mm:.1f} mm de {TUMOR_RADIUS_MM:.0f} mm)."
+            f"radio fisico esperado ({peak_distance_alpha_mm:.1f} mm de {eff_r:.1f} mm)."
         )
     else:
         att_reason = (
             f"El punto de mayor contraste en atenuacion acustica aparece a "
             f"{peak_distance_alpha_mm:.1f} mm de la zona esperada -- mas lejos de lo "
-            f"fisicamente razonable ({TUMOR_RADIUS_MM:.0f} mm). Esto indica una "
+            f"fisicamente razonable ({eff_r:.1f} mm). Esto indica una "
             f"limitacion de localizacion espacial en la inversion de atenuacion. "
             f"Este canal se excluye como evidencia en este caso."
         )

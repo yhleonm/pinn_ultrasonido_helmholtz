@@ -72,6 +72,24 @@ export default function ReconstructionViewer({ datasetId }: Props) {
           <span className="metric-value">{maps.peak_distance_alpha_mm.toFixed(1)} mm</span>
         </div>
       )}
+      {maps.c_roi_mean_ms != null && (
+        <div className="metric-card">
+          <span className="metric-label">Media c (ROI)</span>
+          <span className="metric-value">{maps.c_roi_mean_ms.toFixed(1)} m/s</span>
+        </div>
+      )}
+      {maps.alpha_roi_mean_db != null && (
+        <div className="metric-card metric-card--highlight">
+          <span className="metric-label">Media α (ROI)</span>
+          <span className="metric-value">{maps.alpha_roi_mean_db.toFixed(2)} dB/MHz/cm</span>
+        </div>
+      )}
+      {maps.dice_c != null && (
+        <div className="metric-card">
+          <span className="metric-label">Dice Score (ROI)</span>
+          <span className="metric-value">{maps.dice_c.toFixed(3)}</span>
+        </div>
+      )}
     </div>
   );
 
@@ -84,6 +102,8 @@ export default function ReconstructionViewer({ datasetId }: Props) {
         colorScale="velocity"
         tumorXMm={maps.tumor_x_mm} tumorZMm={maps.tumor_z_mm}
         tumorRadiusMm={maps.tumor_radius_mm}
+        roiContourMm={maps.roi_contour_mm}
+        predContourMm={maps.pred_contour_mm}
         showWarningRing={showWarningC}
         label="Velocidad de sonido c(x,z)"
         unit="m/s"
@@ -97,6 +117,8 @@ export default function ReconstructionViewer({ datasetId }: Props) {
         colorScale="attenuation"
         tumorXMm={maps.tumor_x_mm} tumorZMm={maps.tumor_z_mm}
         tumorRadiusMm={maps.tumor_radius_mm}
+        roiContourMm={maps.roi_contour_mm}
+        predContourMm={maps.pred_contour_mm}
         showWarningRing={showWarningAlpha}
         label="Atenuación α(x,z)"
         unit="dB/MHz/cm"
@@ -145,9 +167,11 @@ export default function ReconstructionViewer({ datasetId }: Props) {
                 overlayOpacity={effectiveOpacity}
                 tumorXMm={maps.tumor_x_mm} tumorZMm={maps.tumor_z_mm}
                 tumorRadiusMm={maps.tumor_radius_mm}
+                roiContourMm={maps.roi_contour_mm}
+                predContourMm={maps.pred_contour_mm}
                 showWarningRing={overlayScale === 'velocity' ? showWarningC : showWarningAlpha}
                 label={maps.bmode_map ? `Ultrasonido B-mode + Contraste (${overlayScale === 'velocity' ? 'Velocidad del sonido' : 'Atenuación'})${!isCurrentChannelReliable ? ' [Atenuado por baja fiabilidad]' : ''}` : 'Mapa de Contraste FWI'}
-                findingLabel={maps.tumor_x_mm !== null ? 'Inclusión' : null}
+                findingLabel={maps.clinical_label ? `ROI Radiólogo (${maps.clinical_label.split(' (')[0]})` : (maps.tumor_x_mm !== null ? 'Inclusión' : null)}
                 isReliable={isCurrentChannelReliable}
                 kSigma={kSigma}
               />

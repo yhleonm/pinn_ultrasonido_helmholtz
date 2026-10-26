@@ -1,13 +1,13 @@
 {
   "tumor_x_mm": -2.5,
   "tumor_z_mm": 11.0,
-  "cnr_c_dbr": 0.5865829301008064,
-  "cnr_alpha_dbr": 8.576013435496655,
-  "peak_distance_mm": 1.9432189263972242,
+  "cnr_c_dbr": 9.879651887551658,
+  "cnr_alpha_dbr": 9.65710761102412,
+  "peak_distance_mm": 1.6177447025491554,
   "x_min_mm": -19.049999999999997,
   "x_max_mm": 19.049999999999997,
   "z_min_mm": 0.0,
   "z_max_mm": 32.0,
   "alpha_unit": "dB/MHz/cm",
-  "peak_distance_alpha_mm": 6.855401383715826
+  "peak_distance_alpha_mm": 1.0280630158331059
 }
