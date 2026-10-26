@@ -4,11 +4,8 @@
 [![CUDA](https://img.shields.io/badge/CUDA-Accelerated-76B900?logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-zone)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React_18-Three.js_%2F_WebGL-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Manuscript](https://img.shields.io/badge/Manuscrito_RACCEFYN-PDF_Oficial-B31B1B?logo=adobeacrobatreader&logoColor=white)](articulo/manuscrito_raccefyn.pdf)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-> **Artículo Científico (Sección: Ciencias Físicas — RACCEFYN):**  
-> 📄 [**Descargar Manuscrito Completo (`articulo/manuscrito_raccefyn.pdf`)**](articulo/manuscrito_raccefyn.pdf) · [**Código Fuente LaTeX (`articulo/manuscrito_raccefyn.tex`)**](articulo/manuscrito_raccefyn.tex)  
 > **Autor:** Yerson Hernando León-Montañez ([ORCID: 0009-0000-4439-8661](https://orcid.org/0009-0000-4439-8661))  
 > *Facultad de Ingeniería, Maestría en Inteligencia Artificial, Universidad de La Salle, Bogotá, Colombia.*
 
@@ -21,8 +18,6 @@ La reconstrucción cuantitativa simultánea de la **velocidad de fase compresion
 Este repositorio implementa un marco variacional libre de malla basado en **Redes Neuronales de Representación Implícita Periódica (SIREN)** informadas por la **ecuación diferencial parcial Eikonal factorizada** y el **transporte log-espectral regularizado**, acopladas directamente a operadores físicos diferenciables sobre señales crudas de radiofrecuencia (RF):
 
 $$\lvert\nabla\tau(\mathbf{x})\rvert^2 = \left(\frac{\partial\tau}{\partial x}\right)^2 + \left(\frac{\partial\tau}{\partial z}\right)^2 = \frac{1}{c^2(\mathbf{x})}, \qquad 2\,\nabla\tau(\mathbf{x})\cdot\nabla\ln A(\mathbf{x}, f) + \nabla^2\tau(\mathbf{x}) = -\frac{2\,\alpha_0(\mathbf{x})\,f}{c(\mathbf{x})}$$
-
-![Arquitectura Física Híbrida PINN-Eikonal](articulo/fig1_arquitectura_pinn_eikonal.png)
 
 ### Componentes Principales de la Arquitectura
 
@@ -39,31 +34,7 @@ $$\lvert\nabla\tau(\mathbf{x})\rvert^2 = \left(\frac{\partial\tau}{\partial x}\r
 
 ---
 
-## 2. Galería Visual de Resultados Experimentales
-
-### 2.1. Régimen I: Ondas Planas Pre-Formadas en Fantoma Calibrado CIRS 040GSE (`CUBDL - MYO001`)
-Reconstrucción simultánea de Modo-B re-enfocado eikonalmente ($\Delta\text{CF} = +20.30\%$), mapa continuo de velocidad de fase $c(x,z)$ ($\text{CNR}_c = 9.82\text{ dBr}$) y mapa desacoplado de atenuación espectral $\alpha_0(x,z)$ ($\text{CNR}_\alpha = 9.91\text{ dBr}$):
-
-![Resultados CUBDL MYO001](articulo/resultados_fwi_real_cubdl_MYO001.png)
-
-### 2.2. Régimen II: Inversión de Campo Completo 100% Ciega sobre Señales RF Clínicas a 40 MHz (`OASBUD`)
-Reconstrucción de campo completo ($38 \times 35\text{--}45\text{ mm}$) sin usar máscaras radiológicas durante el entrenamiento, discriminando inclusiones de baja dispersión (BI-RADS 3: `1mm`, `2mm`) frente a inclusiones altamente dispersivas y atenuantes (BI-RADS 5: `4lw`, `8he`):
-
-![Comparativa Clínica OASBUD](articulo/comparativa_clinica_oasbud_benigno_vs_maligno.png)
-
-### 2.3. Dinámica Numérica de Convergencia y Estabilidad Espectral
-Evolución semilogarítmica del funcional de pérdida física compuesta $\mathcal{L}_{\text{total}}$ y descenso acoplado de los errores relativos de velocidad y atenuación sin sesgo espectral (*spectral bias*):
-
-![Convergencia PINN-Eikonal](articulo/fig3_convergencia_pinn_eikonal.png)
-
-### 2.4. Plataforma Interactiva de Visualización Científica: *Medical Insight 3D*
-Interfaz web moderna desarrollada en **React 18 + TypeScript + Three.js/WebGL + FastAPI** para la inspección multiparamétrica 2D/3D de los campos reconstruidos $c(x,z)$, $\alpha_0(x,z)$, Modo-B re-enfocado y telemetría biofísica en tiempo real:
-
-![Plataforma Medical Insight 3D](articulo/medical_insight_3d_preview.png)
-
----
-
-## 3. Resumen de Métricas Cuantitativas Validadas
+## 2. Resumen de Métricas Cuantitativas Validadas
 
 ### Fase 1: Benchmark Internacional CUBDL (Ondas Planas Multi-Ángulo Pre-Formadas, $N=7$)
 
@@ -91,7 +62,7 @@ Interfaz web moderna desarrollada en **React 18 + TypeScript + Three.js/WebGL + 
 
 ---
 
-## 4. Estructura del Repositorio
+## 3. Estructura del Repositorio
 
 ```text
 pinn_ultrasonido_helmholtz/
@@ -107,19 +78,13 @@ pinn_ultrasonido_helmholtz/
 ├── medical_insight_webapp/          # Plataforma web interactiva Medical Insight 3D
 │   ├── backend/                     # Servidor API REST y gestor de trabajos GPU en FastAPI
 │   └── frontend/                    # Cliente React 18 + TypeScript + Three.js + TailwindCSS
-├── articulo/
-│   ├── manuscrito_raccefyn.tex      # Código fuente LaTeX oficial (Plantilla RACCEFYN Styles_ACCEFN.sty)
-│   ├── manuscrito_raccefyn.pdf      # Manuscrito compilado listo para revisión por pares
-│   ├── referencias_raccefyn.bib     # Base de datos bibliográfica verificada (APA 7 / DOIs validados)
-│   ├── carta_sometimiento_raccefyn.tex # Carta de presentación editorial para RACCEFYN
-│   └── *.png / metrics_*.json       # Figuras científicas y telemetría de casos precalculados
 ├── start_webapp.ps1 / .bat          # Scripts de arranque unificado para Windows
 └── requirements.txt                 # Dependencias científicas de Python y PyTorch
 ```
 
 ---
 
-## 5. Instalación, Descarga de Datasets y Ejecución
+## 4. Instalación, Descarga de Datasets y Ejecución
 
 ### 5.1. Requisitos e Instalación del Entorno Python
 
@@ -159,9 +124,9 @@ Por buenas prácticas de ingeniería de repositorios científicos, los archivos 
   python main_eikonal_pinn_oasbud.py
   ```
 
-### 5.4. Despliegue del Visor Interactivo *Medical Insight 3D*
+### 4.4. Despliegue del Visor Interactivo *Medical Insight 3D*
 
-El repositorio incluye las reconstrucciones y métricas precalculadas en `articulo/` para que el visor web funcione de inmediato tras clonar el proyecto:
+Para levantar la plataforma interactiva *Medical Insight 3D*:
 
 ```powershell
 # Opción rápida en Windows (levanta Backend FastAPI en puerto 8000 y Frontend Vite en puerto 5173):

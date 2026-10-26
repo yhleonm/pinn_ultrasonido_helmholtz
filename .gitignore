@@ -21,8 +21,8 @@ data_raw/uploads/*
 !data_raw/uploads/.gitkeep
 medical_insight_webapp/backend/workspace_placeholder/
 
-# PDFs grandes de literatura SOTA (>10MB)
-articulo/sota/*.pdf
+# PDFs y carpeta completa del artículo (excluida del repositorio público)
+articulo/
 
 # ==========================================
 # Archivos temporales de compilación LaTeX
